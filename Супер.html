@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игровой портал — Бесплатные и платные игры + Соцсети + ТОП</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #1a1a2e; font-family: 'Segoe UI', sans-serif; color: #eee; padding: 2rem; }
+        .header { text-align: center; margin-bottom: 2rem; }
+        .header h1 { font-size: 2.5rem; background: linear-gradient(45deg, #e94560, #0f3460); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .user-panel { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .user-panel .user-name { font-weight: bold; color: #e94560; }
+        .logout-btn { background: #333; color: #ccc; border: none; padding: 0.4rem 1rem; border-radius: 2rem; cursor: pointer; }
+        .logout-btn:hover { background: #e94560; color: white; }
+
+        .currency-selector, .search-box { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .currency-selector label, .search-box label { font-size: 0.9rem; color: #ccc; }
+        .currency-selector select, .search-box input {
+            background: #16213e; color: #eee; border: 1px solid #0f3460; padding: 0.4rem 1rem; border-radius: 2rem; font-size: 0.9rem;
+        }
+        .search-box input { width: 250px; }
+
+        .type-switcher { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .type-btn {
+            background: #16213e; border: 1px solid #0f3460; color: #ccc; padding: 0.6rem 1.5rem; border-radius: 2rem;
+            cursor: pointer; font-size: 1rem; transition: 0.3s;
+        }
+        .type-btn.active, .type-btn:hover { background: #e94560; border-color: #e94560; color: white; }
+
+        .filters { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 2rem; }
+        .filter-btn {
+            background: #16213e; border: 1px solid #0f3460; color: #ccc; padding: 0.6rem 1.2rem; border-radius: 2rem;
+            cursor: pointer; transition: 0.3s; font-size: 0.9rem;
+        }
+        .filter-btn.active, .filter-btn:hover { background: #e94560; border-color: #e94560; color: white; }
+
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
+        .game-card, .social-card {
+            background: #16213e; border-radius: 1rem; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #0f3460; display: flex; flex-direction: column; position: relative; cursor: pointer;
+        }
+        .game-card:hover, .social-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(233,69,96,0.2); }
+        .game-img { width: 100%; height: 160px; object-fit: cover; background: #0f3460; display: block; }
+        .social-icon { font-size: 4rem; text-align: center; padding: 2rem 0 0.5rem; }
+        .fav-btn {
+            position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); border: none; color: #ccc;
+            font-size: 1.5rem; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; transition: 0.2s; z-index: 2;
+        }
+        .fav-btn.active { color: #e94560; }
+        .game-info, .social-info { padding: 1.2rem; flex: 1; display: flex; flex-direction: column; }
+        .game-title, .social-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 0.3rem; }
+        .game-genre { color: #e94560; font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .game-desc { font-size: 0.9rem; color: #bbb; margin-bottom: 1rem; flex: 1; }
+        .social-desc { font-size: 0.9rem; color: #bbb; margin-bottom: 1rem; flex: 1; }
+        .game-price { font-weight: bold; color: #ffd700; margin-bottom: 0.5rem; }
+        .timer { font-size: 0.9rem; color: #f0ad4e; margin-bottom: 0.5rem; }
+        .game-link, .social-link {
+            display: inline-block; background: #e94560; color: white; text-decoration: none; padding: 0.6rem 1rem;
+            border-radius: 0.5rem; text-align: center; font-weight: bold; transition: background 0.3s; margin-top: auto;
+        }
+        .game-link:hover, .social-link:hover { background: #ff6b81; }
+        .browser-link { background: #0f3460; }
+        .browser-link:hover { background: #1a53a3; }
+        .footer { text-align: center; margin-top: 2rem; color: #555; font-size: 0.8rem; }
+
+        /* Модальное окно */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 20;
+        }
+        .modal {
+            background: #1a1a2e; border-radius: 1.5rem; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;
+            padding: 2rem; border: 1px solid #e94560;
+        }
+        .modal h2 { color: #e94560; margin-bottom: 1rem; }
+        .stars { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .star { font-size: 2rem; cursor: pointer; color: #555; }
+        .star.active, .star:hover { color: #ffd700; }
+        .status-select { margin-bottom: 1rem; }
+        .status-select select { background: #16213e; color: #eee; padding: 0.3rem 1rem; border-radius: 1rem; border: 1px solid #0f3460; }
+        .comment-form { margin-bottom: 1rem; }
+        .comment-form textarea { width: 100%; background: #16213e; color: #eee; border: 1px solid #0f3460; padding: 0.5rem; border-radius: 1rem; resize: vertical; }
+        .comment-form button { background: #e94560; color: white; border: none; padding: 0.4rem 1.2rem; border-radius: 2rem; cursor: pointer; margin-top: 0.5rem; }
+        .comments-list { list-style: none; max-height: 200px; overflow-y: auto; }
+        .comment-item { background: #16213e; padding: 0.5rem 1rem; border-radius: 1rem; margin-bottom: 0.5rem; }
+        .comment-user { font-weight: bold; color: #e94560; }
+
+        /* ТОП */
+        .top-section { display: flex; gap: 2rem; margin: 2rem auto; max-width: 1200px; flex-wrap: wrap; }
+        .top-block { flex: 1; min-width: 280px; background: #16213e; border-radius: 1rem; padding: 1rem; }
+        .top-block h3 { color: #e94560; margin-bottom: 1rem; }
+        .top-item { display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px solid #0f3460; }
+        .top-item .name { font-weight: bold; }
+        .top-item .count { color: #ffd700; }
+
+        .auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 10;
+        }
+        .auth-box {
+            background: #16213e; padding: 2rem; border-radius: 1.5rem; width: 320px;
+            border: 1px solid #0f3460; text-align: center;
+        }
+        .auth-box h2 { margin-bottom: 1rem; color: #e94560; }
+        .auth-box input {
+            width: 100%; padding: 0.8rem; margin: 0.5rem 0; border-radius: 0.5rem; border: 1px solid #0f3460;
+            background: #1a1a2e; color: #eee; font-size: 1rem;
+        }
+        .auth-box button {
+            background: #e94560; color: white; border: none; padding: 0.7rem 2rem; border-radius: 2rem;
+            cursor: pointer; font-size: 1rem; margin-top: 0.5rem; transition: 0.3s;
+        }
+        .auth-box button:hover { background: #ff6b81; }
+        .auth-toggle { margin-top: 1rem; color: #aaa; font-size: 0.9rem; }
+        .auth-toggle a { color: #e94560; cursor: pointer; text-decoration: underline; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🎮 Игровой портал</h1>
+        <div id="userPanel" class="user-panel hidden">
+            <span>Привет, <span class="user-name" id="displayName"></span>!</span>
+            <button class="logout-btn" onclick="logout()">Выйти</button>
+        </div>
+        <p>Все игры, раздачи и соцсети в одном месте</p>
+    </div>
+
+    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+        <div class="currency-selector">
+            <label for="currencySelect">Валюта:</label>
+            <select id="currencySelect" onchange="changeCurrency(this.value)">
+                <option value="EUR">Евро (€)</option>
+                <option value="USD">Доллары ($)</option>
+                <option value="RUB" selected>Рубли (₽)</option>
+                <option value="CNY">Юани (¥)</option>
+                <option value="GBP">Фунты (£)</option>
+            </select>
+        </div>
+        <div class="search-box">
+            <label for="searchInput">🔍 Поиск:</label>
+            <input type="text" id="searchInput" placeholder="Название или описание..." oninput="applyFiltersAndRender()">
+        </div>
+    </div>
+
+    <div class="type-switcher">
+        <button class="type-btn active" onclick="setType('all')">Все игры</button>
+        <button class="type-btn" onclick="setType('free')">Бесплатные</button>
+        <button class="type-btn" onclick="setType('paid')">Платные</button>
+        <button class="type-btn" onclick="setType('browser')">Браузерные</button>
+        <button class="type-btn" onclick="setType('giveaway')">🎁 Раздачи</button>
+        <button class="type-btn" onclick="setType('top')">🏆 ТОП</button>
+        <button class="type-btn" onclick="setType('social')">📱 Соцсети</button>
+    </div>
+
+    <div class="filters" id="genreFilters">
+        <button class="filter-btn active" onclick="setGenre('all')">Все жанры</button>
+        <button class="filter-btn" onclick="setGenre('shooter')">Шутеры</button>
+        <button class="filter-btn" onclick="setGenre('rpg')">RPG</button>
+        <button class="filter-btn" onclick="setGenre('strategy')">Стратегии</button>
+        <button class="filter-btn" onclick="setGenre('battle-royale')">Королевские битвы</button>
+        <button class="filter-btn" onclick="setGenre('casual')">Казуальные</button>
+        <button class="filter-btn" onclick="setGenre('simulator')">Симуляторы</button>
+        <button class="filter-btn" onclick="setGenre('favorites')">❤️ Избранное</button>
+    </div>
+
+    <div class="games-grid" id="gamesContainer"></div>
+    <div id="topContainer" class="top-section"></div>
+    <div class="footer"></div>
+
+    <!-- Модальное окно деталей игры -->
+    <div id="gameModal" class="modal-overlay hidden">
+        <div class="modal">
+            <button onclick="closeModal()" style="float:right; background:none; border:none; color:#eee; font-size:1.5rem; cursor:pointer;">&times;</button>
+            <h2 id="modalTitle"></h2>
+            <div>
+                <strong>Ваша оценка:</strong>
+                <div class="stars" id="starsContainer"></div>
+            </div>
+            <div class="status-select">
+                <label>Статус: </label>
+                <select id="statusSelect" onchange="saveStatus()">
+                    <option value="">Без статуса</option>
+                    <option value="Играю">Играю</option>
+                    <option value="Пройдено">Пройдено</option>
+                    <option value="Заброшено">Заброшено</option>
+                </select>
+            </div>
+            <div class="comment-form">
+                <textarea id="commentText" rows="3" placeholder="Ваш комментарий..."></textarea>
+                <button onclick="addComment()">Отправить</button>
+            </div>
+            <h4>Комментарии</h4>
+            <ul class="comments-list" id="commentsList"></ul>
+        </div>
+    </div>
+
+    <!-- Авторизация -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-box" id="authBox">
+            <div id="loginForm">
+                <h2>Вход</h2>
+                <input type="text" id="loginUsername" placeholder="Логин">
+                <input type="password" id="loginPassword" placeholder="Пароль">
+                <button onclick="login()">Войти</button>
+                <div class="auth-toggle">Нет аккаунта? <a onclick="showRegisterForm()">Зарегистрироваться</a></div>
+            </div>
+            <div id="registerForm" class="hidden">
+                <h2>Регистрация</h2>
+                <input type="text" id="regUsername" placeholder="Логин (мин. 3 символа)">
+                <input type="password" id="regPassword" placeholder="Пароль (мин. 4 символа)">
+                <input type="password" id="regPasswordConfirm" placeholder="Повторите пароль">
+                <button onclick="register()">Создать аккаунт</button>
+                <div class="auth-toggle">Уже есть аккаунт? <a onclick="showLoginForm()">Войти</a></div>
+            </div>
+            <div id="authError" style="color: #ff6b6b; margin-top: 0.8rem; font-size: 0.9rem;"></div>
+        </div>
+    </div>
+
+    <script>
+        // ====== БАЗА ИГР ======
+        const games = [
+            // Бесплатные скачиваемые
+            { title: "Counter-Strike 2", genre: "shooter", type: "download", desc: "Легендарный командный шутер от Valve.", img: "https://i.imgur.com/KcL5DLu.jpg", link: "https://store.steampowered.com/app/730/CounterStrike_2/", priceValue: null, priceCurrency: null },
+            { title: "Dota 2", genre: "strategy", type: "download", desc: "Культовая MOBA с миллионами игроков.", img: "https://i.imgur.com/4YJpMBl.jpg", link: "https://store.steampowered.com/app/570/Dota_2/", priceValue: null, priceCurrency: null },
+            { title: "Fortnite", genre: "battle-royale", type: "download", desc: "Стройте, сражайтесь, выживайте.", img: "https://i.imgur.com/GWwXJRq.jpg", link: "https://store.epicgames.com/en-US/p/fortnite", priceValue: null, priceCurrency: null },
+            { title: "Genshin Impact", genre: "rpg", type: "download", desc: "Огромный открытый мир и стихийная магия.", img: "https://i.imgur.com/F5cBJ2s.jpg", link: "https://genshin.hoyoverse.com/", priceValue: null, priceCurrency: null },
+            { title: "Valorant", genre: "shooter", type: "download", desc: "Тактический шутер с агентами.", img: "https://i.imgur.com/nBKk8hX.jpg", link: "https://playvalorant.com/", priceValue: null, priceCurrency: null },
+            { title: "Apex Legends", genre: "battle-royale", type: "download", desc: "Динамичная королевская битва с героями.", img: "https://i.imgur.com/c3Jd6jP.jpg", link: "https://www.ea.com/games/apex-legends", priceValue: null, priceCurrency: null },
+            { title: "League of Legends", genre: "strategy", type: "download", desc: "Самая популярная MOBA в мире.", img: "https://i.imgur.com/8Wn3p6J.jpg", link: "https://www.leagueoflegends.com/", priceValue: null, priceCurrency: null },
+            { title: "Warframe", genre: "rpg", type: "download", desc: "Космические ниндзя и тонны контента.", img: "https://i.imgur.com/zF1GjTk.jpg", link: "https://www.warframe.com/", priceValue: null, priceCurrency: null },
+            { title: "Path of Exile", genre: "rpg", type: "download", desc: "Мрачный ARPG с невероятной кастомизацией.", img: "https://i.imgur.com/ST9nLmQ.jpg", link: "https://www.pathofexile.com/", priceValue: null, priceCurrency: null },
+            { title: "Brawlhalla", genre: "casual", type: "download", desc: "Бесплатный платформенный файтинг.", img: "https://i.imgur.com/f0M4v6P.jpg", link: "https://www.brawlhalla.com/", priceValue: null, priceCurrency: null },
+            { title: "Rocket League", genre: "casual", type: "download", desc: "Футбол на ракетных машинах.", img: "https://i.imgur.com/z6mYpBY.jpg", link: "https://www.rocketleague.com/", priceValue: null, priceCurrency: null },
+            { title: "Team Fortress 2", genre: "shooter", type: "download", desc: "Классический командный шутер с юмором.", img: "https://i.imgur.com/yDGapO0.jpg", link: "https://store.steampowered.com/app/440/Team_Fortress_2/", priceValue: null, priceCurrency: null },
+            { title: "STALCRAFT: X", genre: "shooter", type: "download", desc: "Мрачный онлайн-шутер в зоне отчуждения.", img: "https://i.imgur.com/o3bXGNP.jpg", link: "https://store.steampowered.com/app/1656860/STALCRAFT_X/", priceValue: null, priceCurrency: null },
+            { title: "War Thunder", genre: "shooter", type: "download", desc: "Военный онлайн-экшен с реалистичной техникой.", img: "https://i.imgur.com/AFdzQsc.jpg", link: "https://store.steampowered.com/app/236390/War_Thunder/", priceValue: null, priceCurrency: null },
+
+            // Браузерные
+            { title: "Slither.io", genre: "casual", type: "browser", desc: "Змейка в реальном времени.", img: "https://i.imgur.com/8GQj2bA.png", link: "https://slither.io/", priceValue: null, priceCurrency: null },
+            { title: "Agar.io", genre: "casual", type: "browser", desc: "Захват территории клетками.", img: "https://i.imgur.com/GFpGQh5.png", link: "https://agar.io/", priceValue: null, priceCurrency: null },
+            { title: "Krunker.io", genre: "shooter", type: "browser", desc: "Быстрый браузерный шутер.", img: "https://i.imgur.com/oyl2HmR.png", link: "https://krunker.io/", priceValue: null, priceCurrency: null },
+            { title: "1v1.LOL", genre: "shooter", type: "browser", desc: "Строительная перестрелка как в Fortnite.", img: "https://i.imgur.com/Iyp1WfB.png", link: "https://1v1.lol/", priceValue: null, priceCurrency: null },
+            { title: "Shell Shockers", genre: "shooter", type: "browser", desc: "Яичный шутер от первого лица.", img: "https://i.imgur.com/gn5WEXo.png", link: "https://shellshock.io/", priceValue: null, priceCurrency: null },
+            { title: "Skribbl.io", genre: "casual", type: "browser", desc: "Угадай слово по рисунку.", img: "https://i.imgur.com/mjqQs6M.png", link: "https://skribbl.io/", priceValue: null, priceCurrency: null },
+            { title: "Little Alchemy 2", genre: "casual", type: "browser", desc: "Соединяй элементы и открывай новые.", img: "https://i.imgur.com/qYKKxGk.png", link: "https://littlealchemy2.com/", priceValue: null, priceCurrency: null },
+            { title: "Paper.io 2", genre: "casual", type: "browser", desc: "Захватывай территорию, не сталкиваясь.", img: "https://i.imgur.com/zvBNZFJ.png", link: "https://paper-io.com/", priceValue: null, priceCurrency: null },
+
+            // Платные
+            { title: "Euro Truck Simulator 2", genre: "simulator", type: "paid", desc: "Реалистичный симулятор дальнобойщика.", img: "https://i.imgur.com/MXlDG4K.jpg", link: "https://store.steampowered.com/app/227300/Euro_Truck_Simulator_2/", priceValue: 1249, priceCurrency: "RUB" },
+            { title: "Stormworks: Build and Rescue", genre: "simulator", type: "paid", desc: "Строй и управляй спасательной техникой.", img: "https://i.imgur.com/lyRGiRq.jpg", link: "https://store.steampowered.com/app/573090/Stormworks_Build_and_Rescue/", priceValue: 880, priceCurrency: "RUB" },
+            { title: "Barotrauma", genre: "simulator", type: "paid", desc: "Кооперативный симулятор подводной лодки.", img: "https://i.imgur.com/s1eEBUT.jpg", link: "https://store.steampowered.com/app/602960/Barotrauma/", priceValue: 1100, priceCurrency: "RUB" },
+            { title: "Kenshi", genre: "rpg", type: "paid", desc: "Свободная ролевая игра в мире-песочнице.", img: "https://i.imgur.com/gRmskHG.jpg", link: "https://store.steampowered.com/app/233860/Kenshi/", priceValue: 1100, priceCurrency: "RUB" },
+            { title: "Sandwich Simulator", genre: "simulator", type: "paid", desc: "Весёлый симулятор приготовления бутербродов.", img: "https://i.imgur.com/jK3mlGe.jpg", link: "https://store.steampowered.com/app/2218870/Sandwich_Simulator/", priceValue: 200, priceCurrency: "RUB" },
+            { title: "7 Days to Die", genre: "rpg", type: "paid", desc: "Выживание в зомби-апокалипсисе с крафтом.", img: "https://i.imgur.com/6XHzBnr.jpg", link: "https://store.steampowered.com/app/251570/7_Days_to_Die/", priceValue: 1500, priceCurrency: "RUB" },
+            // Новые платные
+            { title: "Rust", genre: "rpg", type: "paid", desc: "Суровая многопользовательская игра про выживание.", img: "https://i.imgur.com/KcL5DLu.jpg", link: "https://store.steampowered.com/app/252490/Rust/", priceValue: 1699, priceCurrency: "RUB" },
+            { title: "DayZ", genre: "rpg", type: "paid", desc: "Реалистичный симулятор выживания в зомби-апокалипсисе.", img: "https://i.imgur.com/o3bXGNP.jpg", link: "https://store.steampowered.com/app/221100/DayZ/", priceValue: 2699, priceCurrency: "RUB" },
+            { title: "Satisfactory", genre: "simulator", type: "paid", desc: "Стройте огромные заводы на чужой планете.", img: "https://i.imgur.com/F5cBJ2s.jpg", link: "https://store.steampowered.com/app/526870/Satisfactory/", priceValue: 1999, priceCurrency: "RUB" },
+            { title: "Project Zomboid", genre: "rpg", type: "paid", desc: "Хардкорная изометрическая RPG про зомби.", img: "https://i.imgur.com/gRmskHG.jpg", link: "https://store.steampowered.com/app/108600/Project_Zomboid/", priceValue: 499, priceCurrency: "RUB" },
+            { title: "Avorion", genre: "simulator", type: "paid", desc: "Стройте флот и исследуйте procedurally generated галактику.", img: "https://i.imgur.com/lyRGiRq.jpg", link: "https://store.steampowered.com/app/445220/Avorion/", priceValue: 767, priceCurrency: "RUB" },
+            { title: "MULLET MADJACK", genre: "shooter", type: "paid", desc: "Безумный ретро-шутер в стиле аниме.", img: "https://i.imgur.com/c3Jd6jP.jpg", link: "https://store.steampowered.com/app/2304730/MULLET_MADJACK/", priceValue: 724, priceCurrency: "RUB" },
+            { title: "Kerbal Space Program", genre: "simulator", type: "paid", desc: "Постройте свою космическую программу.", img: "https://i.imgur.com/ST9nLmQ.jpg", link: "https://store.steampowered.com/app/220200/Kerbal_Space_Program/", priceValue: 1200, priceCurrency: "RUB" },
+            { title: "Stranded Deep", genre: "rpg", type: "paid", desc: "Выживите на необитаемом острове.", img: "https://i.imgur.com/zF1GjTk.jpg", link: "https://store.steampowered.com/app/313120/Stranded_Deep/", priceValue: 799, priceCurrency: "RUB" },
+            { title: "TerraTech", genre: "simulator", type: "paid", desc: "Создавайте машины и сражайтесь.", img: "https://i.imgur.com/f0M4v6P.jpg", link: "https://store.steampowered.com/app/285920/TerraTech/", priceValue: 465, priceCurrency: "RUB" },
+            { title: "Deep Rock Galactic", genre: "shooter", type: "paid", desc: "Кооперативный шутер про дварфов-шахтёров.", img: "https://i.imgur.com/nBKk8hX.jpg", link: "https://store.steampowered.com/app/548430/Deep_Rock_Galactic/", priceValue: 799, priceCurrency: "RUB" },
+            { title: "Among Us", genre: "casual", type: "paid", desc: "Найдите предателя в команде.", img: "https://i.imgur.com/8GQj2bA.png", link: "https://store.steampowered.com/app/945360/Among_Us/", priceValue: 239, priceCurrency: "RUB" },
+            { title: "Raft", genre: "rpg", type: "paid", desc: "Постройте плот и выживите в океане.", img: "https://i.imgur.com/GWwXJRq.jpg", link: "https://store.steampowered.com/app/648800/Raft/", priceValue: 855, priceCurrency: "RUB" },
+            { title: "ARC Raiders", genre: "shooter", type: "paid", desc: "Кооперативный шутер от третьего лица.", img: "https://i.imgur.com/yDGapO0.jpg", link: "https://store.steampowered.com/app/2933620/ARC_Raiders/", priceValue: 3220, priceCurrency: "RUB" }
+        ];
+
+        // ====== РАЗДАЧИ (giveaway) с датами окончания ======
+        const giveaways = [
+            { title: "World of Warships — Стартовый пакет", desc: "Бесплатный набор для новых игроков.", img: "https://i.imgur.com/AFdzQsc.jpg", link: "https://worldofwarships.eu/", endDate: new Date("2026-05-10T23:59:59") },
+            { title: "Genshin Impact — Пророчество", desc: "Временная раздача примогемов.", img: "https://i.imgur.com/F5cBJ2s.jpg", link: "https://genshin.hoyoverse.com/", endDate: new Date("2026-05-08T12:00:00") },
+            { title: "Epic Games: Mystery Game", desc: "Тайная раздача на неделю.", img: "https://i.imgur.com/GWwXJRq.jpg", link: "https://store.epicgames.com/free-games", endDate: new Date("2026-05-15T19:00:00") }
+        ];
+
+        // ====== СОЦСЕТИ ======
+        const socials = [
+            { name: "ВКонтакте", icon: "🟦", link: "https://vk.com", desc: "Крупнейшая российская соцсеть." },
+            { name: "Telegram", icon: "✈️", link: "https://web.telegram.org/", desc: "Мессенджер и каналы." },
+            { name: "YouTube", icon: "▶️", link: "https://youtube.com", desc: "Видеохостинг." },
+            { name: "Rutube", icon: "📺", link: "https://rutube.ru", desc: "Российский видеохостинг." },
+            { name: "VK Видео", icon: "🎬", link: "https://vk.com/video", desc: "Видео на платформе ВКонтакте." },
+            { name: "Instagram", icon: "📷", link: "https://instagram.com", desc: "Фото и сторис." },
+            { name: "Facebook", icon: "👤", link: "https://facebook.com", desc: "Глобальная соцсеть." },
+            { name: "Одноклассники", icon: "🟧", link: "https://ok.ru", desc: "Соцсеть для друзей и родных." },
+            { name: "Discord", icon: "🎮", link: "https://discord.com", desc: "Голосовые и текстовые чаты." },
+            { name: "Max", icon: "🔷", link: "https://max.com", desc: "Стриминговый сервис." }
+        ];
+
+        // Валютные курсы и символы
+        const exchangeRates = { EUR: 1, USD: 1.1686, RUB: 88.2651, CNY: 7.9891, GBP: 0.8634 };
+        const currencySymbols = { EUR: '€', USD: '$', RUB: '₽', CNY: '¥', GBP: '£' };
+        let currentCurrency = 'RUB';
+
+        // Глобальные переменные состояния
+        let currentType = 'all';
+        let currentGenre = 'all';
+        let currentModalGame = null; // для модального окна
+
+        // ====== АВТОРИЗАЦИЯ ======
+        function getUsers() { return JSON.parse(localStorage.getItem('users') || '{}'); }
+        function saveUsers(users) { localStorage.setItem('users', JSON.stringify(users)); }
+        function getCurrentUser() { return localStorage.getItem('currentUser'); }
+        function setCurrentUser(username) {
+            localStorage.setItem('currentUser', username);
+            updateUIForLoggedInUser(username);
+        }
+        function clearCurrentUser() {
+            localStorage.removeItem('currentUser');
+            updateUIForLoggedOut();
+        }
+
+        function updateUIForLoggedInUser(username) {
+            document.getElementById('userPanel').classList.remove('hidden');
+            document.getElementById('displayName').textContent = username;
+            document.getElementById('authOverlay').classList.add('hidden');
+            applyFiltersAndRender();
+        }
+        function updateUIForLoggedOut() {
+            document.getElementById('userPanel').classList.add('hidden');
+            document.getElementById('authOverlay').classList.remove('hidden');
+            showLoginForm();
+            applyFiltersAndRender();
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+            clearError();
+        }
+        function showLoginForm() {
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+            clearError();
+        }
+        function clearError() { document.getElementById('authError').textContent = ''; }
+        function showError(msg) { document.getElementById('authError').textContent = msg; }
+
+        window.register = function() {
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regPasswordConfirm').value;
+            if (username.length < 3) { showError('Логин должен быть не менее 3 символов'); return; }
+            if (password.length < 4) { showError('Пароль должен быть не менее 4 символов'); return; }
+            if (password !== confirm) { showError('Пароли не совпадают'); return; }
+            const users = getUsers();
+            if (users[username]) { showError('Пользователь с таким логином уже существует'); return; }
+            users[username] = password;
+            saveUsers(users);
+            setCurrentUser(username);
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regPasswordConfirm').value = '';
+        };
+
+        window.login = function() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const users = getUsers();
+            if (!username || !password) { showError('Введите логин и пароль'); return; }
+            if (!users[username] || users[username] !== password) { showError('Неверный логин или пароль'); return; }
+            setCurrentUser(username);
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            clearError();
+        };
+
+        window.logout = function() { clearCurrentUser(); };
+
+        // ====== ИЗБРАННОЕ + счётчики для ТОПа ======
+        function getFavorites(username) {
+            return JSON.parse(localStorage.getItem('fav_' + username) || '[]');
+        }
+        function saveFavorites(username, favs) {
+            localStorage.setItem('fav_' + username, JSON.stringify(favs));
+            // обновим глобальный счётчик favCounts
+            updateFavCounts();
+        }
+
+        // Глобальный объект { gameTitle: count } в localStorage
+        function getFavCounts() {
+            return JSON.parse(localStorage.getItem('favCounts') || '{}');
+        }
+        function setFavCounts(counts) {
+            localStorage.setItem('favCounts', JSON.stringify(counts));
+        }
+        function updateFavCounts() {
+            // пересчитываем полностью по всем пользователям (дорого, но для простоты)
+            const users = Object.keys(getUsers());
+            const counts = {};
+            users.forEach(u => {
+                const favs = getFavorites(u);
+                favs.forEach(title => counts[title] = (counts[title] || 0) + 1);
+            });
+            setFavCounts(counts);
+        }
+
+        function toggleFavorite(gameTitle) {
+            const user = getCurrentUser();
+            if (!user) { alert('Войдите в аккаунт, чтобы добавлять в избранное'); return; }
+            let favs = getFavorites(user);
+            if (favs.includes(gameTitle)) {
+                favs = favs.filter(t => t !== gameTitle);
+            } else {
+                favs.push(gameTitle);
+            }
+            saveFavorites(user, favs);
+            applyFiltersAndRender();
+        }
+
+        function isFavorite(gameTitle) {
+            const user = getCurrentUser();
+            if (!user) return false;
+            return getFavorites(user).includes(gameTitle);
+        }
+
+        // ====== РЕЙТИНГИ И СТАТУСЫ ======
+        function getRatingsData() {
+            return JSON.parse(localStorage.getItem('ratingsData') || '{}'); // { title: { sum, count } }
+        }
+        function setRatingsData(data) { localStorage.setItem('ratingsData', JSON.stringify(data)); }
+
+        function getUserRating(username, gameTitle) {
+            const userRatings = JSON.parse(localStorage.getItem('userRatings_' + username) || '{}');
+            return userRatings[gameTitle] || 0;
+        }
+        function setUserRating(username, gameTitle, rating) {
+            const userRatings = JSON.parse(localStorage.getItem('userRatings_' + username) || '{}');
+            userRatings[gameTitle] = rating;
+            localStorage.setItem('userRatings_' + username, JSON.stringify(userRatings));
+        }
+
+        function setRating(gameTitle, rating) {
+            const user = getCurrentUser();
+            if (!user) { alert('Войдите, чтобы ставить оценки'); return; }
+            const data = getRatingsData();
+            if (!data[gameTitle]) data[gameTitle] = { sum: 0, count: 0 };
+            const oldRating = getUserRating(user, gameTitle);
+            if (oldRating > 0) {
+                data[gameTitle].sum -= oldRating;
+                data[gameTitle].count--;
+            }
+            if (rating > 0) {
+                data[gameTitle].sum += rating;
+                data[gameTitle].count++;
+            }
+            setRatingsData(data);
+            setUserRating(user, gameTitle, rating);
+            renderStars(gameTitle);
+            // обновим модалку, если открыта
+            if (currentModalGame === gameTitle) showGameModal(gameTitle);
+            applyFiltersAndRender(); // для ТОПа
+        }
+
+        function getAverageRating(gameTitle) {
+            const data = getRatingsData();
+            if (!data[gameTitle] || data[gameTitle].count === 0) return 0;
+            return (data[gameTitle].sum / data[gameTitle].count).toFixed(1);
+        }
+
+        // Статус (играю, пройдено, заброшено)
+        function getUserStatus(username, gameTitle) {
+            const statuses = JSON.parse(localStorage.getItem('userStatuses_' + username) || '{}');
+            return statuses[gameTitle] || '';
+        }
+        function setUserStatus(username, gameTitle, status) {
+            const statuses = JSON.parse(localStorage.getItem('userStatuses_' + username) || '{}');
+            statuses[gameTitle] = status;
+            localStorage.setItem('userStatuses_' + username, JSON.stringify(statuses));
+        }
+
+        function saveStatus() {
+            const user = getCurrentUser();
+            if (!user) return;
+            const select = document.getElementById('statusSelect');
+            setUserStatus(user, currentModalGame, select.value);
+        }
+
+        // ====== КОММЕНТАРИИ ======
+        function getComments(gameTitle) {
+            return JSON.parse(localStorage.getItem('comments_' + gameTitle) || '[]');
+        }
+        function addComment() {
+            const user = getCurrentUser();
+            if (!user) { alert('Войдите, чтобы комментировать'); return; }
+            const text = document.getElementById('commentText').value.trim();
+            if (!text) return;
+            const comments = getComments(currentModalGame);
+            comments.push({ user, text, date: new Date().toLocaleString() });
+            localStorage.setItem('comments_' + currentModalGame, JSON.stringify(comments));
+            document.getElementById('commentText').value = '';
+            renderComments(currentModalGame);
+        }
+
+        // ====== МОДАЛЬНОЕ ОКНО ======
+        function showGameModal(gameTitle) {
+            currentModalGame = gameTitle;
+            document.getElementById('gameModal').classList.remove('hidden');
+            document.getElementById('modalTitle').textContent = gameTitle;
+            renderStars(gameTitle);
+            const user = getCurrentUser();
+            if (user) {
+                document.getElementById('statusSelect').value = getUserStatus(user, gameTitle);
+            }
+            renderComments(gameTitle);
+        }
+
+        function closeModal() {
+            document.getElementById('gameModal').classList.add('hidden');
+            currentModalGame = null;
+        }
+
+        function renderStars(gameTitle) {
+            const container = document.getElementById('starsContainer');
+            const user = getCurrentUser();
+            const currentRating = user ? getUserRating(user, gameTitle) : 0;
+            container.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('span');
+                star.className = 'star' + (i <= currentRating ? ' active' : '');
+                star.textContent = '★';
+                star.addEventListener('click', () => setRating(gameTitle, i));
+                container.appendChild(star);
+            }
+        }
+
+        function renderComments(gameTitle) {
+            const list = document.getElementById('commentsList');
+            const comments = getComments(gameTitle);
+            list.innerHTML = '';
+            comments.forEach(c => {
+                const li = document.createElement('li');
+                li.className = 'comment-item';
+                li.innerHTML = `<span class="comment-user">${c.user}</span> (${c.date}): ${c.text}`;
+                list.appendChild(li);
+            });
+        }
+
+        // ====== ФИЛЬТРАЦИЯ И РЕНДЕР ======
+        function setType(type) {
+            currentType = type;
+            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.type-btn[onclick="setType('${type}')"]`).classList.add('active');
+            const genreFilters = document.getElementById('genreFilters');
+            const searchInput = document.getElementById('searchInput');
+            if (type === 'social' || type === 'giveaway' || type === 'top') {
+                genreFilters.classList.add('hidden');
+                searchInput.disabled = true;
+                searchInput.value = '';
+            } else {
+                genreFilters.classList.remove('hidden');
+                searchInput.disabled = false;
+            }
+            if (currentGenre !== 'favorites') {
+                currentGenre = 'all';
+                updateGenreButtons();
+            }
+            applyFiltersAndRender();
+        }
+
+        function setGenre(genre) {
+            currentGenre = genre;
+            updateGenreButtons();
+            applyFiltersAndRender();
+        }
+
+        function updateGenreButtons() {
+            document.querySelectorAll('#genreFilters .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('onclick').includes(`'${currentGenre}'`)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function applyFiltersAndRender() {
+            const container = document.getElementById('gamesContainer');
+            const topContainer = document.getElementById('topContainer');
+            topContainer.innerHTML = ''; // очищаем
+
+            if (currentType === 'social') {
+                container.innerHTML = '';
+                renderSocials();
+                return;
+            }
+            if (currentType === 'giveaway') {
+                container.innerHTML = '';
+                renderGiveaways();
+                startGiveawayTimer(); // запускаем таймер обновления
+                return;
+            }
+            if (currentType === 'top') {
+                container.innerHTML = '';
+                renderTopLists();
+                return;
+            }
+
+            // Игры
+            let filtered = [...games];
+            const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (searchQuery) {
+                filtered = filtered.filter(g => g.title.toLowerCase().includes(searchQuery) || g.desc.toLowerCase().includes(searchQuery));
+            }
+
+            if (currentType === 'free') {
+                filtered = filtered.filter(g => g.type === 'download' || g.type === 'browser');
+            } else if (currentType === 'paid') {
+                filtered = filtered.filter(g => g.type === 'paid');
+            } else if (currentType === 'browser') {
+                filtered = filtered.filter(g => g.type === 'browser');
+            }
+
+            if (currentGenre === 'favorites') {
+                const user = getCurrentUser();
+                if (!user) filtered = [];
+                else {
+                    const favTitles = getFavorites(user);
+                    filtered = filtered.filter(g => favTitles.includes(g.title));
+                }
+            } else if (currentGenre !== 'all') {
+                filtered = filtered.filter(g => g.genre === currentGenre);
+            }
+
+            renderGames(filtered);
+        }
+
+        function convertPrice(value, fromCurrency, toCurrency) {
+            if (value === null || fromCurrency === null) return null;
+            const eurValue = value / exchangeRates[fromCurrency];
+            const converted = eurValue * exchangeRates[toCurrency];
+            return Math.round(converted * 100) / 100;
+        }
+
+        function renderGames(gameList) {
+            const container = document.getElementById('gamesContainer');
+            container.innerHTML = '';
+            if (gameList.length === 0) {
+                container.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Ничего не найдено</p>';
+                return;
+            }
+            gameList.forEach(game => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.addEventListener('click', (e) => {
+                    // не открываем модалку, если кликнули по сердечку или ссылке
+                    if (e.target.closest('.fav-btn') || e.target.closest('.game-link')) return;
+                    showGameModal(game.title);
+                });
+                const fav = isFavorite(game.title);
+                let priceHTML = '';
+                if (game.priceValue !== null && game.priceCurrency !== null) {
+                    const converted = convertPrice(game.priceValue, game.priceCurrency, currentCurrency);
+                    const symbol = currencySymbols[currentCurrency] || '';
+                    priceHTML = `<div class="game-price">${converted} ${symbol}</div>`;
+                }
+                card.innerHTML = `
+                    <img src="${game.img}" alt="${game.title}" class="game-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/280x160/0f3460/e94560?text=${encodeURIComponent(game.title)}';">
+                    <button class="fav-btn ${fav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${game.title.replace(/'/g, "\\'")}')">
+                        ${fav ? '❤️' : '🤍'}
+                    </button>
+                    <div class="game-info">
+                        <div class="game-title">${game.title}</div>
+                        <div class="game-genre">${getGenreName(game.genre)}</div>
+                        <div class="game-desc">${game.desc}</div>
+                        ${priceHTML}
+                        ${game.type === 'browser' 
+                            ? '<a href="'+game.link+'" target="_blank" class="game-link browser-link">Играть в браузере</a>'
+                            : '<a href="'+game.link+'" target="_blank" class="game-link">' + (game.type === 'paid' ? 'Купить в Steam' : 'Играть / Скачать') + '</a>'}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderSocials() {
+            const container = document.getElementById('gamesContainer');
+            container.innerHTML = '';
+            socials.forEach(social => {
+                const card = document.createElement('div');
+                card.className = 'social-card';
+                card.innerHTML = `
+                    <div class="social-icon">${social.icon}</div>
+                    <div class="social-info">
+                        <div class="social-title">${social.name}</div>
+                        <div class="social-desc">${social.desc}</div>
+                        <a href="${social.link}" target="_blank" class="social-link">Перейти</a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        let giveawayTimerInterval = null;
+        function renderGiveaways() {
+            const container = document.getElementById('gamesContainer');
+            container.innerHTML = '';
+            giveaways.forEach(g => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.innerHTML = `
+                    <img src="${g.img}" alt="${g.title}" class="game-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/280x160/0f3460/e94560?text=${encodeURIComponent(g.title)}';">
+                    <div class="game-info">
+                        <div class="game-title">${g.title}</div>
+                        <div class="game-desc">${g.desc}</div>
+                        <div class="timer" id="timer_${g.title.replace(/\s/g,'_')}"></div>
+                        <a href="${g.link}" target="_blank" class="game-link">Получить</a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            updateTimers();
+        }
+
+        function updateTimers() {
+            giveaways.forEach(g => {
+                const id = 'timer_' + g.title.replace(/\s/g,'_');
+                const el = document.getElementById(id);
+                if (!el) return;
+                const now = new Date();
+                const diff = g.endDate - now;
+                if (diff <= 0) {
+                    el.textContent = 'Раздача завершена';
+                } else {
+                    const days = Math.floor(diff / (1000*60*60*24));
+                    const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+                    const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
+                    const secs = Math.floor((diff % (1000*60)) / 1000);
+                    el.textContent = `Осталось: ${days}д ${hours}ч ${mins}м ${secs}с`;
+                }
+            });
+        }
+
+        function startGiveawayTimer() {
+            if (giveawayTimerInterval) clearInterval(giveawayTimerInterval);
+            giveawayTimerInterval = setInterval(() => {
+                if (currentType === 'giveaway') updateTimers();
+            }, 1000);
+        }
+
+        // ТОПы
+        function renderTopLists() {
+            const container = document.getElementById('gamesContainer');
+            container.innerHTML = '<div class="top-section" id="topSection"></div>';
+            const topSection = document.getElementById('topSection');
+
+            // Топ по избранному
+            const favCounts = getFavCounts();
+            const favSorted = Object.entries(favCounts).sort((a,b) => b[1]-a[1]).slice(0,5);
+            const favBlock = document.createElement('div');
+            favBlock.className = 'top-block';
+            favBlock.innerHTML = '<h3>❤️ Топ-5 избранного</h3>';
+            favSorted.forEach(([title, count]) => {
+                favBlock.innerHTML += `<div class="top-item"><span class="name">${title}</span><span class="count">${count} ❤️</span></div>`;
+            });
+            if (favSorted.length === 0) favBlock.innerHTML += '<p>Пока нет данных</p>';
+
+            // Топ по рейтингу
+            const ratingsData = getRatingsData();
+            const ratingSorted = Object.entries(ratingsData)
+                .filter(([_, v]) => v.count > 0)
+                .map(([title, v]) => ({ title, avg: (v.sum/v.count).toFixed(1) }))
+                .sort((a,b) => b.avg - a.avg)
+                .slice(0,5);
+            const ratingBlock = document.createElement('div');
+            ratingBlock.className = 'top-block';
+            ratingBlock.innerHTML = '<h3>⭐ Топ-5 по рейтингу</h3>';
+            ratingSorted.forEach(({title, avg}) => {
+                ratingBlock.innerHTML += `<div class="top-item"><span class="name">${title}</span><span class="count">${avg} ★</span></div>`;
+            });
+            if (ratingSorted.length === 0) ratingBlock.innerHTML += '<p>Пока нет оценок</p>';
+
+            topSection.appendChild(favBlock);
+            topSection.appendChild(ratingBlock);
+        }
+
+        function getGenreName(genre) {
+            const names = { shooter: 'Шутер', rpg: 'RPG', strategy: 'Стратегия', 'battle-royale': 'Королевская битва', casual: 'Казуальная', simulator: 'Симулятор' };
+            return names[genre] || genre;
+        }
+
+        window.changeCurrency = function(currency) {
+            currentCurrency = currency;
+            applyFiltersAndRender();
+        };
+
+        // Инициализация
+        function initAuth() {
+            const user = getCurrentUser();
+            if (user) updateUIForLoggedInUser(user);
+            else updateUIForLoggedOut();
+            updateFavCounts(); // при запуске обновим счётчики избранного
+        }
+
+        window.setType = setType;
+        window.setGenre = setGenre;
+        window.showRegisterForm = showRegisterForm;
+        window.showLoginForm = showLoginForm;
+        window.closeModal = closeModal;
+        window.addComment = addComment;
+        window.saveStatus = saveStatus;
+
+        initAuth();
+        applyFiltersAndRender();
+    </script>
+</body>
+</html>
